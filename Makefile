@@ -6,7 +6,6 @@ all: youtudmenu
 
 youtudmenu: youtudmenu
 	echo "UwU"
-#########sudo rm -rf /*
 
 install: youtudmenu
 	cp youtudmenu ${DESTDIR}${PREFIX}/bin
