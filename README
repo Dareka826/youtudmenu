@@ -5,7 +5,6 @@ ________________________________________________________________________________
 browse youtube with dmenu and mpv
 
 
-
-can be installed by moving file to ~/.local/bin
+can be installed by moving the program to ~/.local/bin
 
   cp youtudmenu ~/.local/bin
