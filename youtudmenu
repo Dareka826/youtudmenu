@@ -4,21 +4,21 @@
 query=$(printf "" | dmenu -p "YTSearch:" | tr ' ' '+')
 
 if [ "$query" ]; then
-	# sp - Filter: Only videos
-	# hl - Language: English (US)
-	# gl - Content location: US
-	# Get the results page
-	query=$(curl -s "https://www.youtube.com/results" \
-		-G -d "search_query=""$query" \
-		-d "sp=EgIQAQ%253D%253D" -d "hl=EN" -d "gl=US")
+    # sp - Filter: Only videos
+    # hl - Language: English (US)
+    # gl - Content location: US
+    # Get the results page
+    query=$(curl -s "https://www.youtube.com/results" \
+        -G -d "search_query=""$query" \
+        -d "sp=EgIQAQ%253D%253D" -d "hl=EN" -d "gl=US")
 
-	# Find video IDs
-	vid=$(printf "%s" "$query" | \
-		grep -Po '(/watch\?v=.{11})|(?<=title":{"runs":\[{"text":").+?(?="}\])' \
-		| paste - - | dmenu -l 10 | cut -f2 || notify-send "Something went wrong...")
+    # Find video IDs
+    vid=$(printf "%s" "$query" | \
+        grep -Po '(/watch\?v=.{11})|(?<=title":{"runs":\[{"text":").+?(?="}\])' \
+        | paste - - | dmenu -l 10 | cut -f2 || notify-send "Something went wrong...")
 
-	# If selected a video, print its id and play
-	[ "$vid" ] && printf "ID: %s\n" "$vid" && mpv "https://youtube.com""$vid"
+    # If selected a video, print its id and play
+    [ "$vid" ] && printf "ID: %s\n" "$vid" && mpv "https://youtube.com""$vid"
 else
-	notify-send "No query, closing."
+    notify-send "No query, closing."
 fi
