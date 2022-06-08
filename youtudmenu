@@ -1,7 +1,17 @@
 #!/bin/sh
 
-# Get query from dmenu
-query=$(printf "" | dmenu -p "YTSearch:" | tr ' ' '+')
+SEARCH_PROMPT="YTSearch:"
+
+# Get query
+query=""
+
+# Check for X
+if [ "${DISPLAY}" ]; then
+    query=$(dmenu -p "${SEARCH_PROMPT}" </dev/null | tr ' ' '+')
+else
+    read -r -p "${SEARCH_PROMPT} " query
+    query=$(printf "%s\n" "${query}" | tr ' ' '+')
+fi
 
 if [ "$query" ]; then
     # sp - Filter: Only videos
@@ -23,13 +33,21 @@ if [ "$query" ]; then
     videos="$(printf "%s\n" "${videos_data}" | jq '.["id"] + " " + .["title"]' | sed 's/^"\(.*\)"$/\1/')"
 
     # Choose one
-    video_id="$(printf "%s" "${videos}" | dmenu -l 10 | cut -d' ' -f1)"
+    video_id=""
+    if [ "${DISPLAY}" ]; then
+        video_id="$(printf "%s" "${videos}" | dmenu -l 10 | cut -d' ' -f1)"
+    else
+        video_id="$(printf "%s" "${videos}" | fzf | cut -d' ' -f1)"
+    fi
 
     # If selected a video, print its id and play
     if [ "${video_id}" ]; then
         printf "ID: %s\n" "${video_id}"
-        mpv "https://www.youtube.com/watch?v=${video_id}"
+
+        if [ "${DISPLAY}" ]; then
+            mpv "https://www.youtube.com/watch?v=${video_id}"
+        else
+            mpv --video=no "https://www.youtube.com/watch?v=${video_id}"
+        fi
     fi
-else
-    notify-send "No query, closing."
 fi
