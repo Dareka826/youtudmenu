@@ -26,11 +26,16 @@ if [ "$query" ]; then
     data="$(printf "%s\n" "${results}" | tr '\n' ' ' | \
         grep -Po 'var ytInitialData.*?</script>' | sed 's/^[^{]*//;s/[^}]*$//')"
 
-    # Get a list of json object with titles and video ids
-    videos_data="$(printf "%s\n" "${data}" | jq '.["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][]["videoRenderer"] | { "id": .["videoId"], "title": .["title"]["runs"][0]["text"] }')"
+    # Get a list of json objects with titles and video ids
+    videos_data="$(printf "%s\n" "${data}" | jq '
+        .["contents"] ["twoColumnSearchResultsRenderer"]["primaryContents"]
+        ["sectionListRenderer"]["contents"][0]
+        ["itemSectionRenderer"]["contents"][]["videoRenderer"]
+            | { "id": .["videoId"], "title": .["title"]["runs"][0]["text"] }')"
 
-    # List of IDs + titles
-    videos="$(printf "%s\n" "${videos_data}" | jq '.["id"] + " " + .["title"]' | sed 's/^"\(.*\)"$/\1/')"
+    # Combile ids and titles
+    videos="$(printf "%s\n" "${videos_data}" | jq '.["id"] + " " + .["title"]' \
+        | sed 's/^"\(.*\)"$/\1/')"
 
     # Choose one
     video_id=""
@@ -40,7 +45,7 @@ if [ "$query" ]; then
         video_id="$(printf "%s" "${videos}" | fzf | cut -d' ' -f1)"
     fi
 
-    # If selected a video, print its id and play
+    # If selected a video, print its id and play it
     if [ "${video_id}" ]; then
         printf "ID: %s\n" "${video_id}"
 
