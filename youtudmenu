@@ -7,18 +7,29 @@ if [ "$query" ]; then
     # sp - Filter: Only videos
     # hl - Language: English (US)
     # gl - Content location: US
-    # Get the results page
-    query=$(curl -s "https://www.youtube.com/results" \
-        -G -d "search_query=""$query" \
-        -d "sp=EgIQAQ%253D%253D" -d "hl=EN" -d "gl=US")
+    # Get the results
+    results="$(curl -s "https://www.youtube.com/results" \
+        -G -d "search_query=${query}" \
+        -d "sp=EgIQAQ%253D%253D" -d "hl=EN" -d "gl=US")"
 
-    # Find video IDs
-    vid=$(printf "%s" "$query" | \
-        grep -Po '(/watch\?v=.{11})|(?<=title":{"runs":\[{"text":").+?(?="}\])' \
-        | paste - - | dmenu -l 10 | cut -f2 || notify-send "Something went wrong...")
+    # Extract JSON with video metadata
+    data="$(printf "%s\n" "${results}" | tr '\n' ' ' | \
+        grep -Po 'var ytInitialData.*?</script>' | sed 's/^[^{]*//;s/[^}]*$//')"
+
+    # Get a list of json object with titles and video ids
+    videos_data="$(printf "%s\n" "${data}" | jq '.["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][]["videoRenderer"] | { "id": .["videoId"], "title": .["title"]["runs"][0]["text"] }')"
+
+    # List of IDs + titles
+    videos="$(printf "%s\n" "${videos_data}" | jq '.["id"] + " " + .["title"]' | sed 's/^"\(.*\)"$/\1/')"
+
+    # Choose one
+    video_id="$(printf "%s" "${videos}" | dmenu -l 10 | cut -d' ' -f1)"
 
     # If selected a video, print its id and play
-    [ "$vid" ] && printf "ID: %s\n" "$vid" && mpv "https://youtube.com""$vid"
+    if [ "${video_id}" ]; then
+        printf "ID: %s\n" "${video_id}"
+        mpv "https://www.youtube.com/watch?v=${video_id}"
+    fi
 else
     notify-send "No query, closing."
 fi
