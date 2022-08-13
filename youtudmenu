@@ -31,10 +31,10 @@ if [ "$query" ]; then
         .["contents"] ["twoColumnSearchResultsRenderer"]["primaryContents"]
         ["sectionListRenderer"]["contents"][0]
         ["itemSectionRenderer"]["contents"][]["videoRenderer"]
-            | { "id": .["videoId"], "title": .["title"]["runs"][0]["text"] }')"
+            | { "id": .["videoId"], "title": .["title"]["runs"][0]["text"], "length": .["lengthText"]["simpleText"], "author": .["ownerText"]["runs"][0]["text"], "views": .["viewCountText"]["simpleText"] }')"
 
-    # Combile ids and titles
-    videos="$(printf "%s\n" "${videos_data}" | jq -r '.["id"] + " " + .["title"]')"
+    # Combile video metadata
+    videos="$(printf "%s\n" "${videos_data}" | jq -r '.["id"] + " [" + .["length"] + " / " + .["views"] + "] " + .["title"] + " / " + .["author"]')"
 
     # Choose one
     video_id=""
